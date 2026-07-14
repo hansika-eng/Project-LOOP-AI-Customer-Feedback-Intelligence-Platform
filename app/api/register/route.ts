@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { registerSchema } from "@/validators/registerSchema";
 import { registerUser } from "@/services/auth.service";
 
@@ -14,15 +15,23 @@ export async function POST(req: Request) {
       success: true,
       message: "Registration successful",
     });
-  } catch (error: any) {
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: error.issues[0].message,
+        },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
-        message: error.message,
+        message: "Something went wrong",
       },
-      {
-        status: 400,
-      }
+      { status: 500 }
     );
   }
 }
